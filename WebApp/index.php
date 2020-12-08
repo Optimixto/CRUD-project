@@ -1,6 +1,7 @@
 <?php
     session_start();
     require_once "pdo.php";
+    include_once "util.php";
 
     // Grabbing data from the database
     $stmt = $pdo->query("SELECT first_name, last_name, headline, profile_id FROM profile");
@@ -20,17 +21,7 @@
     <div class="container">
         <h1>Alex GM's Resume Registry</h1>
         <?php
-            //flash messages
-            if ( isset($_SESSION['error']) ) {
-                echo '<p style="color:red">'.$_SESSION['error']."</p>\n";
-                unset($_SESSION['error']);
-            }
-
-            if ( isset($_SESSION['success']) ) {
-                echo '<p style="color:green">'.$_SESSION['success']."</p>\n";
-                unset($_SESSION['success']);
-            }
-
+            flashMessages();
             
             if(!isset($_SESSION['name']))
                 {

@@ -1,6 +1,7 @@
 <?php
     session_start();
     require_once "pdo.php";
+    include_once "util.php";
     
     // Logged in check
     if ( ! isset($_SESSION['name']) ) {
@@ -82,10 +83,7 @@
         
         <h2>Editing usermobile</h2>
         <?php
-            if ( isset($_SESSION['error']) ) {
-                echo('<p style="color: red;">'.htmlentities($_SESSION['error'])."</p>\n");
-                unset($_SESSION['error']);
-            }
+            flashMessages();
 
             //Placeholder vars for current values
             $fn = htmlentities($row['first_name']);

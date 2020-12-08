@@ -1,6 +1,7 @@
 <?php
     session_start();
     require_once "pdo.php";
+    include_once "util.php";
 
     $salt = 'XyZzy12*_';
 
@@ -48,10 +49,7 @@
     <div class="container">
         <h1>Please Log In</h1>
         <?php
-        if ( isset($_SESSION['error'])) {
-            echo('<p style="color: red;">'.htmlentities($_SESSION['error'])."</p>\n");
-            unset($_SESSION['error']);
-        }
+            flashMessages();
         ?>
         <form method="post">
             <p><b>Email:</b>

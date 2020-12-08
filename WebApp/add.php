@@ -1,6 +1,7 @@
 <?php
     session_start();
     require_once "pdo.php";
+    include_once "util.php";
     
     // Logged in check
     if ( ! isset($_SESSION['name']) ) {
@@ -64,10 +65,7 @@
         <h1>Adding profile for <?php echo($_SESSION['name']);?></h1>
         
         <?php
-        if ( isset($_SESSION['error']) ) {
-            echo('<p style="color: red;">'.htmlentities($_SESSION['error'])."</p>\n");
-            unset($_SESSION['error']);
-        }
+            flashMessages();
         ?>
         <form method="post">
             <p>First Name:

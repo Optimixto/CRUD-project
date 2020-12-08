@@ -1,6 +1,7 @@
 <?php
     session_start();
     require_once "pdo.php";
+    include_once "util.php";
     
     //Makes sure profile_id is present
     if ( !isset($_GET['profile_id']) ) {
@@ -35,10 +36,7 @@
         <h1>Viewing profile</h1>
         
         <?php
-            if ( isset($_SESSION['error']) ) {
-                echo('<p style="color: red;">'.htmlentities($_SESSION['error'])."</p>\n");
-                unset($_SESSION['error']);
-            }
+            flashMessages();
 
             //Placeholder vars for current values
             $fn = htmlentities($row['first_name']);
