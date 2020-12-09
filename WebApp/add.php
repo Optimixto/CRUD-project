@@ -32,6 +32,14 @@
         }
         else
         {
+            $msg = validatePos();
+            if(is_string($msg))
+            {
+                $_SESSION['error'] = $msg;
+                header("Location: add.php");
+                return;
+            }
+
             $stmt = $pdo->prepare('INSERT INTO Profile
                 (user_id, first_name, last_name, email, headline, summary)
                 VALUES ( :uid, :fn, :ln, :em, :he, :su)');
@@ -44,6 +52,30 @@
                 ':he' => $_POST['headline'],
                 ':su' => $_POST['summary'])
             );
+
+            $profile_id = $pdo->lastInsertId();
+            
+            //Position entries insert
+            $rank = 1;
+            for($i=0; $i<=9; $i++)
+            {
+                if(!isset($_POST['year'.$i])) continue;
+                if(!isset($_POST['desc'.$i])) continue;
+                $year = $_POST['year'.$i];
+                $desc = $_POST['desc'.$i];
+
+                $stmt = $pdo->prepare('INSERT INTO Position
+                    (profile_id, rank, year, description)
+                    VALUES (:pid, :rank, :year, :desc)');
+                $stmt->execute(array(
+                    ':pid' => $profile_id,
+                    ':rank' => $rank,
+                    ':year' => $year,
+                    ':desc' => $desc
+                ));
+                $rank++;
+            }
+
             $_SESSION['success'] = "Record added";
             header("Location: index.php");
             return;
@@ -60,7 +92,6 @@
 <body>
     <div class="container">
         <h1>Adding profile for <?php echo($_SESSION['name']);?></h1>
-        
         <?php
             flashMessages();
         ?>
@@ -75,10 +106,37 @@
             <p><input type="text" name="headline" size="40"></p>
             <p>Summary:</p>
             <p><textarea name="summary" rows="8" cols="60"></textarea>
+            <p>Position: <input type=submit id="addPos" value="+">
+                <div id="position_fields">
+                </div>
+            </p>
             <p>
                 <input type="submit" value="Add"/>
                 <input type="submit" name="cancel" value="Cancel"/>
             </p>
         </form>
+        <script>
+            countPos = 0;
+
+            $(document).ready(function(){
+                window.console && console.log('Document ready called');
+                $('#addPos').click(function(event) {
+                    event.preventDefault();
+                    if(countPos >= 9){
+                        alert("Maximum of nine position entries exceeded");
+                        return;
+                    }
+                    countPos++;
+                    window.console && console.log("Adding position "+countPos);
+                    $('#position_fields').append(
+                        '<div id="position'+countPos+'"> \
+                        <p>Year: <input type="text" name="year'+countPos+'" value="" /> \
+                        <input type="button" value="-" \
+                            onclick="$(\'#position' +countPos+'\').remove(); return false;"></p>\
+                        <textarea name="desc'+countPos+'" rows="8" cols="80"></textarea>\
+                    </div>');
+                })
+            });
+        </script>
     </div>
 </body>
