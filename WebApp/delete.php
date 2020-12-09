@@ -4,7 +4,7 @@
 
     // Logged in check
     if ( ! isset($_SESSION['name']) ) {
-        die('Not logged in');
+        die('ACCESS DENIED');
     }
 
     //Makes sure profile_id is present
