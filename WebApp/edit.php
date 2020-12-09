@@ -72,10 +72,7 @@
 <html>
 <head>
     <title>Alejandro Garcia Muñoz (8c7a1f68) - profiles DB</title>
-    <link rel="stylesheet" 
-    href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" 
-    integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" 
-    crossorigin="anonymous">
+    <?php include "headImports.php" ?>
 </head>
 <body>
     <div class="container">
