@@ -50,6 +50,14 @@
         }
         else
         {
+            $msg = validatePos();
+            if(is_string($msg))
+            {
+                $_SESSION['error'] = $msg;
+                header("Location: add.php");
+                return;
+            }
+
             $sql = "UPDATE profile SET first_name = :fn,
                     last_name =:ln, email =:em, headline =:he, summary =:su WHERE profile_id = :pid";
             $stmt = $pdo->prepare($sql);
@@ -61,11 +69,41 @@
                 ':su' => $_POST['summary'],
                 ':pid' => $_GET['profile_id'])
             );
-            $_SESSION['success'] = "Record edited";
+
+            //Clear position entries
+            $stmt = $pdo->prepare('DELETE FROM Position
+                WHERE profile_id = :pid');
+            $stmt->execute(array(':pid' => $_REQUEST['profile_id']));
+            
+            //from add.php, we insert the new data
+            $rank = 1;
+            for($i=1; $i<=9; $i++)
+            {
+                if(!isset($_POST['year'.$i])) continue;
+                if(!isset($_POST['desc'.$i])) continue;
+                $year = $_POST['year'.$i];
+                $desc = $_POST['desc'.$i];
+
+                $stmt = $pdo->prepare('INSERT INTO Position
+                    (profile_id, rank, year, description)
+                    VALUES (:pid, :rank, :year, :desc)');
+                $stmt->execute(array(
+                    ':pid' => $_REQUEST['profile_id'],
+                    ':rank' => $rank,
+                    ':year' => $year,
+                    ':desc' => $desc
+                ));
+                $rank++;
+            }
+
+            $_SESSION['success'] = "Profile updated";
             header("Location: index.php");
             return;
         }
     }
+
+    //Load positions data
+    $positions = loadPos($pdo, $_REQUEST['profile_id']);
 ?>
 
 <!DOCTYPE html>
@@ -103,10 +141,55 @@
             <p><input type="text" name="headline" size="40" value="<?= $he ?>"></p>
             <p><b>Summary:</b></p>
             <p><textarea name="summary" rows="8" cols="60"><?= $su ?></textarea>
+            <?php
+                $pos = 0;
+                echo('<p>Position: <input type=submit id="addPos" value="+">');
+                echo('<div id="position_fields">'."\n");
+
+                foreach($positions as $position)
+                {
+                    $pos++;
+                    echo('<div id="position'.$pos.'">'."\n");
+                    echo('<p>Year: <input type="text" name="year'.$pos.'"');
+                        echo('value="'.$position['year'].'" />'."\n");
+                    echo('<input type="button" value="-"');
+                        echo('onclick="$(\'#position'.$pos.'\').remove(); return false;">'."\n");
+                    echo("</p>\n");
+                    echo('<textarea name="desc'.$pos.'" rows="8" cols="80">'."\n");
+                    echo(htmlentities($position['description'])."\n");
+                    echo("\n</textarea>\n</div>\n");
+                }
+
+                echo('</div>');
+            ?>
+            </p>
             <p>
                 <input type="submit" value="Save"/>
                 <input type="submit" name="cancel" value="Cancel"/>
             </p>
         </form>
+        <script>
+            countPos = 0;
+
+            $(document).ready(function(){
+                window.console && console.log('Document ready called');
+                $('#addPos').click(function(event) {
+                    event.preventDefault();
+                    if(countPos >= 9){
+                        alert("Maximum of nine position entries exceeded");
+                        return;
+                    }
+                    countPos++;
+                    window.console && console.log("Adding position "+countPos);
+                    $('#position_fields').append(
+                        '<div id="position'+countPos+'"> \
+                        <p>Year: <input type="text" name="year'+countPos+'" value="" /> \
+                        <input type="button" value="-" \
+                            onclick="$(\'#position' +countPos+'\').remove(); return false;"></p>\
+                        <textarea name="desc'+countPos+'" rows="8" cols="80"></textarea>\
+                    </div>');
+                })
+            });
+        </script>
     </div>
 </body>
