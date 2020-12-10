@@ -43,6 +43,8 @@
             $su = htmlentities($row['summary']);
             $user_id = $row['user_id'];
             $profile_id = $_GET['profile_id'];
+
+            $positions = loadPos($pdo, $profile_id);
         ?>
 
         <form method="post">
@@ -53,6 +55,21 @@
             <p><?= $he ?></p>
             <p><b>Summary:</b></p>
             <p><?= $su ?></p>
+            <?php
+                if(count($positions)>0)
+                {
+                    echo('<b>Positions</b>');
+                    echo('<ul>');
+                    foreach($positions as $position)
+                    {
+                        echo('<li>');
+                        echo('<p>'.$position['year'].'</p>');
+                        echo('<p>'.$position['description'].'</p>');
+                        echo('</li>');
+                    }
+                    echo('</ul>');
+                }
+            ?>
             <p>
                 <a href="index.php">Back</a>
             </p>
