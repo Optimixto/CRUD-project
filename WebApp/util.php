@@ -31,6 +31,19 @@
         return true;
     }
 
+    function validateProfile() {
+        if(empty($_POST["first_name"]) || empty($_POST["last_name"]) 
+            || empty($_POST["email"]) || empty($_POST["headline"]) || empty($_POST["summary"]))
+        {
+            return "All fields are required";
+        }
+        elseif(strpos(($_POST['email']), '@') == false)
+        {
+            return "Email address must contain @";
+        }
+        return true;
+    }
+
     function loadPos($pdo, $profile_id)
     {
         $stmt = $pdo->prepare('SELECT * FROM Position
@@ -42,5 +55,12 @@
             $positions[] = $row;
         }
         return $positions;
+    }
+
+    function loadProfile($pdo, $profile_id){
+        $stmt = $pdo->prepare("SELECT * FROM profile where profile_id = :xyz");
+        $stmt->execute(array(":xyz" => $profile_id));
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row;
     }
 ?>

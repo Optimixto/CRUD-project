@@ -17,69 +17,63 @@
     // Input handler
     if($_SERVER["REQUEST_METHOD"] == "POST")
     {
-        if(empty($_POST["first_name"]) || empty($_POST["last_name"]) 
-            || empty($_POST["email"]) || empty($_POST["headline"]) || empty($_POST["summary"]))
+        $msg = validateProfile();
+        if(is_string($msg))
         {
-            $_SESSION['error'] = "All fields are required";
+            $_SESSION['error'] = $msg;
             header("Location: add.php");
             return;
         }
-        elseif(strpos(($_POST['email']), '@') == false)
+
+        $msg = validatePos();
+        if(is_string($msg))
         {
-            $_SESSION['error'] = "Email address must contain @";
+            $_SESSION['error'] = $msg;
             header("Location: add.php");
             return;
         }
-        else
+
+        // TODO: Validate education
+
+        $stmt = $pdo->prepare('INSERT INTO Profile
+            (user_id, first_name, last_name, email, headline, summary)
+            VALUES ( :uid, :fn, :ln, :em, :he, :su)');
+
+        $stmt->execute(array(
+            ':uid' => $_SESSION['user_id'],
+            ':fn' => $_POST['first_name'],
+            ':ln' => $_POST['last_name'],
+            ':em' => $_POST['email'],
+            ':he' => $_POST['headline'],
+            ':su' => $_POST['summary'])
+        );
+
+        $profile_id = $pdo->lastInsertId();
+        
+        //Position entries insert
+        $rank = 1;
+        for($i=0; $i<=9; $i++)
         {
-            $msg = validatePos();
-            if(is_string($msg))
-            {
-                $_SESSION['error'] = $msg;
-                header("Location: add.php");
-                return;
-            }
+            if(!isset($_POST['year'.$i])) continue;
+            if(!isset($_POST['desc'.$i])) continue;
+            $year = $_POST['year'.$i];
+            $desc = $_POST['desc'.$i];
 
-            $stmt = $pdo->prepare('INSERT INTO Profile
-                (user_id, first_name, last_name, email, headline, summary)
-                VALUES ( :uid, :fn, :ln, :em, :he, :su)');
-
+            $stmt = $pdo->prepare('INSERT INTO Position
+                (profile_id, rank, year, description)
+                VALUES (:pid, :rank, :year, :desc)');
             $stmt->execute(array(
-                ':uid' => $_SESSION['user_id'],
-                ':fn' => $_POST['first_name'],
-                ':ln' => $_POST['last_name'],
-                ':em' => $_POST['email'],
-                ':he' => $_POST['headline'],
-                ':su' => $_POST['summary'])
-            );
-
-            $profile_id = $pdo->lastInsertId();
-            
-            //Position entries insert
-            $rank = 1;
-            for($i=0; $i<=9; $i++)
-            {
-                if(!isset($_POST['year'.$i])) continue;
-                if(!isset($_POST['desc'.$i])) continue;
-                $year = $_POST['year'.$i];
-                $desc = $_POST['desc'.$i];
-
-                $stmt = $pdo->prepare('INSERT INTO Position
-                    (profile_id, rank, year, description)
-                    VALUES (:pid, :rank, :year, :desc)');
-                $stmt->execute(array(
-                    ':pid' => $profile_id,
-                    ':rank' => $rank,
-                    ':year' => $year,
-                    ':desc' => $desc
-                ));
-                $rank++;
-            }
-
-            $_SESSION['success'] = "Record added";
-            header("Location: index.php");
-            return;
+                ':pid' => $profile_id,
+                ':rank' => $rank,
+                ':year' => $year,
+                ':desc' => $desc
+            ));
+            $rank++;
         }
+
+        $_SESSION['success'] = "Record added";
+        header("Location: index.php");
+        return;
     }
 ?>
 

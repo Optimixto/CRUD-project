@@ -10,10 +10,7 @@
         return;
     }
 
-    //Grabs data to fill form
-    $stmt = $pdo->prepare("SELECT * FROM profile where profile_id = :xyz");
-    $stmt->execute(array(":xyz" => $_GET['profile_id']));
-    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    $row = loadProfile($pdo, $_GET['profile_id']);
     if ( $row === false )
     {
         $_SESSION['error'] = 'Bad value for profile_id';

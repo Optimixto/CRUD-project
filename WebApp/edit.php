@@ -22,9 +22,7 @@
     }
 
     //Grabs data to fill form
-    $stmt = $pdo->prepare("SELECT * FROM profile where profile_id = :xyz");
-    $stmt->execute(array(":xyz" => $_GET['profile_id']));
-    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    $row = loadProfile($pdo, $_GET['profile_id']);
     if ( $row === false )
     {
         $_SESSION['error'] = 'Bad value for profile_id';
@@ -35,71 +33,63 @@
     // Input handler
     if($_SERVER["REQUEST_METHOD"] == "POST")
     {
-        if(empty($_POST["first_name"]) || empty($_POST["last_name"]) 
-            || empty($_POST["email"]) || empty($_POST["headline"]) || empty($_POST["summary"]))
+        $msg = validateProfile();
+        if(is_string($msg))
         {
-            $_SESSION['error'] = "All fields are required";
+            $_SESSION['error'] = $msg;
             header("Location: edit.php?profile_id=".$_GET['profile_id']);
             return;
         }
-        elseif(strpos(($_POST['email']), '@') == false)
-        {
-            $_SESSION['error'] = "Email address must contain @";
-            header("Location: edit.php?profile_id=".$_GET['profile_id']);
-            return;
-        }
-        else
-        {
-            $msg = validatePos();
-            if(is_string($msg))
-            {
-                $_SESSION['error'] = $msg;
-                header("Location: add.php");
-                return;
-            }
 
-            $sql = "UPDATE profile SET first_name = :fn,
-                    last_name =:ln, email =:em, headline =:he, summary =:su WHERE profile_id = :pid";
-            $stmt = $pdo->prepare($sql);
+        $msg = validatePos();
+        if(is_string($msg))
+        {
+            $_SESSION['error'] = $msg;
+            header("Location: add.php");
+            return;
+        }
+
+        $sql = "UPDATE profile SET first_name = :fn,
+                last_name =:ln, email =:em, headline =:he, summary =:su WHERE profile_id = :pid";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute(array(
+            ':fn' => $_POST['first_name'],
+            ':ln' => $_POST['last_name'],
+            ':em' => $_POST['email'],
+            ':he' => $_POST['headline'],
+            ':su' => $_POST['summary'],
+            ':pid' => $_GET['profile_id'])
+        );
+
+        //Clear position entries
+        $stmt = $pdo->prepare('DELETE FROM Position
+            WHERE profile_id = :pid');
+        $stmt->execute(array(':pid' => $_REQUEST['profile_id']));
+        
+        //from add.php, we insert the new data
+        $rank = 1;
+        for($i=1; $i<=9; $i++)
+        {
+            if(!isset($_POST['year'.$i])) continue;
+            if(!isset($_POST['desc'.$i])) continue;
+            $year = $_POST['year'.$i];
+            $desc = $_POST['desc'.$i];
+
+            $stmt = $pdo->prepare('INSERT INTO Position
+                (profile_id, rank, year, description)
+                VALUES (:pid, :rank, :year, :desc)');
             $stmt->execute(array(
-                ':fn' => $_POST['first_name'],
-                ':ln' => $_POST['last_name'],
-                ':em' => $_POST['email'],
-                ':he' => $_POST['headline'],
-                ':su' => $_POST['summary'],
-                ':pid' => $_GET['profile_id'])
-            );
-
-            //Clear position entries
-            $stmt = $pdo->prepare('DELETE FROM Position
-                WHERE profile_id = :pid');
-            $stmt->execute(array(':pid' => $_REQUEST['profile_id']));
-            
-            //from add.php, we insert the new data
-            $rank = 1;
-            for($i=1; $i<=9; $i++)
-            {
-                if(!isset($_POST['year'.$i])) continue;
-                if(!isset($_POST['desc'.$i])) continue;
-                $year = $_POST['year'.$i];
-                $desc = $_POST['desc'.$i];
-
-                $stmt = $pdo->prepare('INSERT INTO Position
-                    (profile_id, rank, year, description)
-                    VALUES (:pid, :rank, :year, :desc)');
-                $stmt->execute(array(
-                    ':pid' => $_REQUEST['profile_id'],
-                    ':rank' => $rank,
-                    ':year' => $year,
-                    ':desc' => $desc
-                ));
-                $rank++;
-            }
-
-            $_SESSION['success'] = "Profile updated";
-            header("Location: index.php");
-            return;
+                ':pid' => $_REQUEST['profile_id'],
+                ':rank' => $rank,
+                ':year' => $year,
+                ':desc' => $desc
+            ));
+            $rank++;
         }
+
+        $_SESSION['success'] = "Profile updated";
+        header("Location: index.php");
+        return;
     }
 
     //Load positions data
