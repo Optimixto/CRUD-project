@@ -49,18 +49,24 @@
         $stmt = $pdo->prepare('SELECT * FROM Position
             WHERE profile_id = :prof ORDER BY rank');
         $stmt->execute(array(':prof' => $profile_id));
-        $positions = array();
-        while($row = $stmt->fetch(PDO::FETCH_ASSOC))
-        {
-            $positions[] = $row;
-        }
+        $positions = $stmt->fetchAll(PDO::FETCH_ASSOC);
         return $positions;
     }
 
     function loadProfile($pdo, $profile_id){
         $stmt = $pdo->prepare("SELECT * FROM profile where profile_id = :xyz");
         $stmt->execute(array(":xyz" => $profile_id));
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $row;
+        $profile = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $profile;
+    }
+
+    function loadEducation($pdo, $profile_id)
+    {
+        $stmt = $pdo->prepare("SELECT year, name FROM education
+                                JOIN Institution ON Education.institution_id = Institution.institution_id
+                                where profile_id = :xyz");
+        $stmt->execute(array(":xyz" => $profile_id));
+        $education = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $education;
     }
 ?>

@@ -35,6 +35,7 @@
 
         // TODO: Validate education
 
+        //Inserts profile
         $stmt = $pdo->prepare('INSERT INTO Profile
             (user_id, first_name, last_name, email, headline, summary)
             VALUES ( :uid, :fn, :ln, :em, :he, :su)');
@@ -50,7 +51,7 @@
 
         $profile_id = $pdo->lastInsertId();
         
-        //Position entries insert
+        //Inserts positions
         $rank = 1;
         for($i=0; $i<=9; $i++)
         {
@@ -70,6 +71,8 @@
             ));
             $rank++;
         }
+
+        // TODO: Inserts education
 
         $_SESSION['success'] = "Record added";
         header("Location: index.php");
@@ -104,6 +107,10 @@
                 <div id="position_fields">
                 </div>
             </p>
+            <p>Education: <input type=submit id="addEdu" value="+">
+                <div id="education_fields">
+                </div>
+            </p>
             <p>
                 <input type="submit" value="Add"/>
                 <input type="submit" name="cancel" value="Cancel"/>
@@ -122,15 +129,45 @@
                     }
                     countPos++;
                     window.console && console.log("Adding position "+countPos);
-                    $('#position_fields').append(
-                        '<div id="position'+countPos+'"> \
-                        <p>Year: <input type="text" name="year'+countPos+'" value="" /> \
-                        <input type="button" value="-" \
-                            onclick="$(\'#position' +countPos+'\').remove(); return false;"></p>\
-                        <textarea name="desc'+countPos+'" rows="8" cols="80"></textarea>\
-                    </div>');
+
+                    var source = $("#pos-template").html();
+                    $('#position_fields').append(source.replaceAll("@COUNTPOS@", countPos));
+                })
+            });
+
+            countEdu = 0;
+
+            $(document).ready(function(){
+                window.console && console.log('Document ready called');
+                $('#addEdu').click(function(event) {
+                    event.preventDefault();
+                    if(countEdu >= 9){
+                        alert("Maximum of nine education entries exceeded");
+                        return;
+                    }
+                    countEdu++;
+                    window.console && console.log("Adding position "+countEdu);
+
+                    var source = $("#edu-template").html();
+                    $('#education_fields').append(source.replaceAll("@COUNTEDU@", countEdu));
                 })
             });
         </script>
     </div>
+    <script id="pos-template" type="text">
+        <div id="position@COUNTPOS@">
+            <p>Year: <input type="text" name="year@COUNTPOS@" value="" >
+                <input type="button" value="-"
+                onclick="$('#position@COUNTPOS@').remove(); return false;"></p>
+            <textarea name="desc@COUNTPOS@" rows="8" cols="80"></textarea>
+        </div>
+    </script>
+    <script id="edu-template" type="text">
+        <div id="position@COUNTEDU@">
+            <p>Year: <input type="text" name="year@COUNTEDU@" value="" >
+                <input type="button" value="-"
+                onclick="$('#position@COUNTEDU@').remove(); return false;"></p>
+            <textarea name="desc@COUNTEDU@" rows="8" cols="80"></textarea>
+        </div>
+    </script>
 </body>
